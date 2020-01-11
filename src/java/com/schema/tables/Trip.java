@@ -40,7 +40,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Trip extends TableImpl<TripRecord> {
 
-    private static final long serialVersionUID = -1125671916;
+    private static final long serialVersionUID = 425838700;
 
     /**
      * The reference instance of <code>gtfs.trip</code>
@@ -73,7 +73,7 @@ public class Trip extends TableImpl<TripRecord> {
     /**
      * The column <code>gtfs.trip.trip_headsign</code>.
      */
-    public final TableField<TripRecord, String> TRIP_HEADSIGN = createField("trip_headsign", org.jooq.impl.SQLDataType.VARCHAR(64), this, "");
+    public final TableField<TripRecord, String> TRIP_HEADSIGN = createField("trip_headsign", org.jooq.impl.SQLDataType.VARCHAR(255), this, "");
 
     /**
      * The column <code>gtfs.trip.trip_short_name</code>.
