@@ -1,4 +1,5 @@
 .idea
+.DS_Store
 mexico.zip
 muni.zip
 mexico/*

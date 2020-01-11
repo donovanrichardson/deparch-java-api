@@ -1,16 +1,23 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.aws.codestar.projecttemplates</groupId>
+    <!-- <groupId>com.aws.codestar.projecttemplates</groupId>
     <artifactId>HelloWorld</artifactId>
     <version>1.0</version>
     <packaging>war</packaging>
-    <name>Sample Java Spring web service Using AWS CodeStar</name>
+    <name>Sample Java Spring web service Using AWS CodeStar</name> -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.0.3.RELEASE</version>
+        <version>2.2.2.RELEASE</version>
     </parent>
+
+    <groupId>com.htimeApi</groupId>
+    <artifactId>application</artifactId>
+    <version>0.1</version>
+    <packaging>war</packaging>
+    <name>Sample Java Spring web service Using AWS CodeStar</name>
+
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -19,77 +26,293 @@
     </properties>
 
     <dependencies>
+    <!-- https://mvnrepository.com/artifact/org.jooq/jooq -->
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>3.11.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq-meta</artifactId>
+            <version>3.11.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq-codegen</artifactId>
+            <version>3.11.7</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.12</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.junit.vintage</groupId>
+                    <artifactId>junit-vintage-engine</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!--Third Snippet : To enable jsp support in embedded tomcat server!-->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <!-- jsoup HTML parser library @ https://jsoup.org/ -->
+            <!--
+jsoup License
+
+The jsoup code-base (including source and compiled packages) are distributed under the open source MIT license as described below.
+The MIT License
+
+Copyright © 2009 - 2019 Jonathan Hedley (jonathan@hedley.net)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.-->
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.12.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20180130</version>
-        </dependency>
+            <version>20190722</version>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit.jupiter.version}</version>
+            <version>5.5.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.jupiter.version}</version>
+            <version>5.5.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>${junit.platform.version}</version>
+            <version>1.5.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-runner</artifactId>
-            <version>${junit.platform.version}</version>
+            <version>1.5.2</version>
             <scope>test</scope>
+        </dependency>
+         <!-- https://mvnrepository.com/artifact/org.springframework/spring-webmvc -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>5.2.2.RELEASE</version>
         </dependency>
     </dependencies>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-war-plugin</artifactId>
-                    <version>3.2.2</version>
-                    <configuration>
-                        <warSourceDirectory>src/main/webapp</warSourceDirectory>
-                        <warName>ROOT</warName>
-                        <failOnMissingWebXml>false</failOnMissingWebXml>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.0</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.junit.platform</groupId>
-                            <artifactId>junit-platform-surefire-provider</artifactId>
-                            <version>${junit.platform.version}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.junit.jupiter</groupId>
-                            <artifactId>junit-jupiter-engine</artifactId>
-                            <version>${junit.jupiter.version}</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <finalName>ROOT</finalName>
+        <sourceDirectory>src/java</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <version>3.11.7</version>
+
+                <!-- The plugin should hook into the generate goal -->
+                <executions>
+                    <execution>
+                        <id>jooq-codegen</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>mysql</groupId>
+                        <artifactId>mysql-connector-java</artifactId>
+                        <version>8.0.12</version>
+                    </dependency>
+                </dependencies>
+
+                <configuration><!--xmlns="http://www.jooq.org/xsd/jooq-codegen-3.11.0.xsd" was inside-->
+                    <!-- Configure the database connection here -->
+                    <jdbc>
+                        <driver>com.mysql.cj.jdbc.Driver</driver>
+                        <url>jdbc:mysql://localhost/lexicon?autoReconnect=true&amp;useSSL=false&amp;useUnicode=true&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false</url> <!--(I set mysql to EST (try &amp;serverTimezone=EST if this doesn't work); set yours to appropriate timezone)-->
+                        <user>root</user>
+                        <password>suwaajii&amp;)ganguro</password>
+
+                        <!-- You can also pass user/password and other JDBC properties in the optional properties tag: -->
+                        <!--<properties>
+                            <property><key>user</key><value>[db-user]</value></property>
+                            <property><key>password</key><value>[db-password]</value></property>
+                        </properties>-->
+                    </jdbc>
+
+                    <generator>
+                        <database>
+                            <!-- The database dialect from jooq-meta. Available dialects are
+                                 named org.jooq.meta.[database].[database]Database.
+
+                                 Natively supported values are:
+
+                                     org.jooq.meta.ase.ASEDatabase
+                                     org.jooq.meta.auroramysql.AuroraMySQLDatabase
+                                     org.jooq.meta.aurorapostgres.AuroraPostgresDatabase
+                                     org.jooq.meta.cubrid.CUBRIDDatabase
+                                     org.jooq.meta.db2.DB2Database
+                                     org.jooq.meta.derby.DerbyDatabase
+                                     org.jooq.meta.firebird.FirebirdDatabase
+                                     org.jooq.meta.h2.H2Database
+                                     org.jooq.meta.hana.HANADatabase
+                                     org.jooq.meta.hsqldb.HSQLDBDatabase
+                                     org.jooq.meta.informix.InformixDatabase
+                                     org.jooq.meta.ingres.IngresDatabase
+                                     org.jooq.meta.mariadb.MariaDBDatabase
+                                     org.jooq.meta.mysql.MySQLDatabase
+                                     org.jooq.meta.oracle.OracleDatabase
+                                     org.jooq.meta.postgres.PostgresDatabase
+                                     org.jooq.meta.redshift.RedshiftDatabase
+                                     org.jooq.meta.sqldatawarehouse.SQLDataWarehouseDatabase
+                                     org.jooq.meta.sqlite.SQLiteDatabase
+                                     org.jooq.meta.sqlserver.SQLServerDatabase
+                                     org.jooq.meta.sybase.SybaseDatabase
+                                     org.jooq.meta.teradata.TeradataDatabase
+                                     org.jooq.meta.vertica.VerticaDatabase
+
+                                 This value can be used to reverse-engineer generic JDBC DatabaseMetaData (e.g. for MS Access)
+
+                                     org.jooq.meta.jdbc.JDBCDatabase
+
+                                 This value can be used to reverse-engineer standard jOOQ-meta XML formats
+
+                                     org.jooq.meta.xml.XMLDatabase
+
+                                 This value can be used to reverse-engineer schemas defined by SQL files (requires jooq-meta-extensions dependency)
+
+                                     org.jooq.meta.extensions.ddl.DDLDatabase
+
+                                 This value can be used to reverse-engineer schemas defined by JPA annotated entities (requires jooq-meta-extensions dependency)
+
+                                     org.jooq.meta.extensions.jpa.JPADatabase
+
+                                 You can also provide your own org.jooq.meta.Database implementation
+                                 here, if your database is currently not supported -->
+                            <name>org.jooq.meta.mysql.MySQLDatabase</name>
+
+                            <!-- All elements that are generated from your schema (A Java regular expression.
+                                 Use the pipe to separate several expressions) Watch out for
+                                 case-sensitivity. Depending on your database, this might be
+                                 important!
+
+                                 You can create case-insensitive regular expressions using this syntax: (?i:expr)
+
+                                 Whitespace is ignored and comments are possible.
+                                 -->
+                            <includes>.*</includes>
+
+                            <!-- All elements that are excluded from your schema (A Java regular expression.
+                                 Use the pipe to separate several expressions). Excludes match before
+                                 includes, i.e. excludes have a higher priority -->
+                            <excludes>
+                                <!--   UNUSED_TABLE                # This table (unqualified name) should not be generated
+                                   | PREFIX_.*                   # Objects with a given prefix should not be generated
+                                   | SECRET_SCHEMA\.SECRET_TABLE # This table (qualified name) should not be generated
+                                   | SECRET_ROUTINE              # This routine (unqualified name) ...-->
+                            </excludes>
+
+                            <!-- The schema that is used locally as a source for meta information.
+                                 This could be your development schema or the production schema, etc
+                                 This cannot be combined with the schemata element.
+
+                                 If left empty, jOOQ will generate all available schemata. See the
+                                 manual's next section to learn how to generate several schemata -->
+                            <inputSchema>gtfs</inputSchema>
+                        </database>
+
+                        <generate>
+                            <!-- Generation flags: See advanced configuration properties -->
+                        </generate>
+
+                        <target>
+                            <!-- The destination package of your generated classes (within the
+                                 destination directory)
+
+                                 jOOQ may append the schema name to this package if generating multiple schemas,
+                                 e.g. org.jooq.your.packagename.schema1
+                                      org.jooq.your.packagename.schema2 -->
+                            <packageName>com.schema</packageName>
+
+                            <!-- The destination directory of your generated classes -->
+                            <directory>src/java</directory>
+                        </target>
+                    </generator>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <archive>
+                        <manifestFile>src/com/htimeApi/resources/META-INF/MANIFEST.MF</manifestFile>
+                        <!--previously src/htimeApi/java/META-INF/MANIFEST.MF -->
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <!--https://stackoverflow.com/questions/4123044/maven-3-warnings-about-build-plugins-plugin-version-->
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--above plugin from https://stackoverflow.com/questions/10568275/noclassdeffounderror-on-maven-dependency-->
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 </project>
