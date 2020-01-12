@@ -134,6 +134,15 @@ The above copyright notice and this permission notice shall be included in all c
             <artifactId>spring-webmvc</artifactId>
             <version>5.2.2.RELEASE</version>
         </dependency>
+        <!--https://stackoverflow.com/questions/56627624/how-to-connect-postgresql-rds-to-spring-boot-in-elastic-beanstalk/56628537-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-aws</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-aws-jdbc</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
