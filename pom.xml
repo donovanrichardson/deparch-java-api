@@ -137,7 +137,7 @@ The above copyright notice and this permission notice shall be included in all c
     </dependencies>
 
     <build>
-        <sourceDirectory>src/java</sourceDirectory>
+        <sourceDirectory>src/main/java</sourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.jooq</groupId>
@@ -272,7 +272,7 @@ The above copyright notice and this permission notice shall be included in all c
                             <packageName>com.schema</packageName>
 
                             <!-- The destination directory of your generated classes -->
-                            <directory>src/java</directory>
+                            <directory>src/main/java</directory>
                         </target>
                     </generator>
                 </configuration>
@@ -283,7 +283,7 @@ The above copyright notice and this permission notice shall be included in all c
                 <version>2.4</version>
                 <configuration>
                     <archive>
-                        <manifestFile>src/com/htimeApi/resources/META-INF/MANIFEST.MF</manifestFile>
+                        <manifestFile>src/main/java/com/htimeApi/resources/META-INF/MANIFEST.MF</manifestFile>
                         <!--previously src/htimeApi/java/META-INF/MANIFEST.MF -->
                     </archive>
                 </configuration>
