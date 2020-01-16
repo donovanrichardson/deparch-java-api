@@ -1,0 +1,1 @@
+web: java -jar target/application-0.1.war
