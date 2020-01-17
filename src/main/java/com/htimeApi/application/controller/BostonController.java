@@ -109,7 +109,7 @@ public class BostonController {
 
     @RequestMapping("/dests")
     @ResponseBody
-    public List<Map<String, Object>> dests(@RequestParam(value= "origin") String origin, @RequestParam(value= "route", required = false) String routeId, @RequestParam(value = "name", required = false) String name ) {
+    public List<Map<String, Object>> dests(@RequestParam(value= "origin") String origin, @RequestParam(value= "routeId", required = false) String routeId, @RequestParam(value = "name", required = false) String name ) {
         DSLContext dsl;
         try{
             dsl = this.connect();

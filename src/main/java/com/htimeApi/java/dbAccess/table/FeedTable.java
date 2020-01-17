@@ -42,22 +42,55 @@ public class FeedTable {
     }
 
     public List<Map<String, Object>> getStopsMaps(String like) {
-        SelectConditionStep notYetMaps = this.applyRouteStops(dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)))
+//          select distinct
+//  stop_time.stop_id,
+//  stop.stop_name,
+//  trip.route_id
+//from stop_time
+//left outer join `stop`
+//  on `gtfs`.`stop`.`stop_id` = `gtfs`.`stop_time`.`stop_id`
+//  join trip on stop_time.trip_id = trip.trip_id where route_id = 39;
+
+        SelectConditionStep notYetMaps = this.applyRouteStops(dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)).leftJoin(TRIP).on(STOP_TIME.TRIP_ID.eq(TRIP.TRIP_ID)))
                 .where(STOP.STOP_NAME.like("%"+like+"%"))
                 .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion)));
         return notYetMaps.fetchMaps();
     }
 
     public List<Map<String, Object>> getDestinationsMaps(String like) {
-        StopTime subq = STOP_TIME.as("sq");
-        SelectSeekStep1 req = this.applyRoute(dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)))
-                .whereExists(dsl.selectFrom(subq)
-                        .where(subq.STOP_ID.eq(this.origin))
-                        .and(STOP_TIME.STOP_SEQUENCE.greaterThan(subq.STOP_SEQUENCE))
-                        .and(STOP_TIME.TRIP_ID.eq(subq.TRIP_ID))
-                        .and(subq.FEED_VERSION.eq(this.feedVersion)))
-                .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion)))
-                .and(STOP.STOP_NAME.like("%"+like+"%")).orderBy(STOP.STOP_NAME.asc());
+//       select distinct stop_id from stop_time as st where trip_id in (select trip_id from stop_time where stop_id = 1) and stop_sequence > (select stop_sequence from stop_time as ss where stop_id = 1 and ss.trip_id = st.trip_id); 1.96s;
+
+//        select distinct
+//  `sq1`.`stop_id`,
+//  /* `sq1`.`stop_sequence`,  */
+//  `gtfs`.`stop`.`stop_name`,
+//--   sq2.stop_sequence,
+//  trip.route_id
+//from `gtfs`.`stop_time` as `sq1`
+//  left outer join `gtfs`.`stop`
+//  on `gtfs`.`stop`.`stop_id` = `sq1`.`stop_id`
+//  left outer join trip on trip.trip_id = sq1.trip_id
+//  right join (select stop_sequence, trip_id from stop_time where stop_id = '31391') as sq2 on sq1.trip_id = sq2.trip_id
+//  where sq1.stop_sequence > sq2.stop_sequence;
+
+        StopTime subq1 = STOP_TIME.as("sq1");
+        StopTime subq2 = STOP_TIME.as("sq2");
+
+        SelectConditionStep req = this.applyRoute(dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME,TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq1.TRIP_ID.eq(subq2.TRIP_ID)).and(subq2.STOP_ID.eq(this.origin)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)));
+//                dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME).from(subq1.leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)))
+//                        .where
+//                                ((subq1.TRIP_ID.in(dsl.select(STOP_TIME.TRIP_ID).from(STOP_TIME).where(STOP_TIME.STOP_ID.eq(this.origin)).and(subq1.FEED_VERSION.eq(this.feedVersion)))))
+//                        .and(subq1.STOP_SEQUENCE.greaterThan(dsl.select(subq2.STOP_SEQUENCE).from(subq2).where((subq2.STOP_ID.eq(this.origin)).and(subq2.TRIP_ID.eq(subq1.TRIP_ID)).and(subq2.FEED_VERSION.eq(subq1.FEED_VERSION)))))
+//                        .and(STOP.STOP_NAME.like("%"+like+"%"))).orderBy(STOP.STOP_NAME.asc());
+//                dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)))
+//                .whereExists(dsl.selectFrom(subq2)
+//                        .where(subq2.STOP_ID.eq(this.origin))
+//                        .and(STOP_TIME.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE))
+//                        .and(STOP_TIME.TRIP_ID.eq(subq2.TRIP_ID))
+
+//                        .and(subq2.FEED_VERSION.eq(this.feedVersion)))
+//                .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion)))
+//                .and(STOP.STOP_NAME.like("%"+like+"%")).orderBy(STOP.STOP_NAME.asc());
         return req.fetchMaps();
     }
 
@@ -211,7 +244,7 @@ public class FeedTable {
 
     private <R extends Record> SelectConditionStep applyRouteStops(SelectConditionStep<Record2<String, String>> where) {
         if(this.route != null){
-            return where.and(STOP_TIME.TRIP_ID.in(this.dsl.select(TRIP.TRIP_ID).from(TRIP).where(TRIP.ROUTE_ID.eq(this.route))));//todo is this the same as an exists statement?
+            return where.and(TRIP.ROUTE_ID.eq(this.route));//todo is this the same as an exists statement?
         }else return where;
     }
 
@@ -219,29 +252,29 @@ public class FeedTable {
         this.origin = origin;
     }
 
-    public String getDestinations() {//todo make sure this takes routes into account
-        return this.getDestinations("");
-    }
+//    public String getDestinations() {//todo make sure this takes routes into account
+//        return this.getDestinations("");
+//    }
 
-    private String getDestinations(String like) {
-        return this.getDestinations(like, Format.PLAIN);
-    }
+//    private String getDestinations(String like) {
+//        return this.getDestinations(like, Format.PLAIN);
+//    }
 
-    private String getDestinations(String like, Format f) {
-        StopTime subq = STOP_TIME.as("sq");
-        Result withoutFormat = this.applyRoute(dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)))
-                .whereExists(dsl.selectFrom(subq)
-                        .where(subq.STOP_ID.eq(this.origin))
-                        .and(STOP_TIME.STOP_SEQUENCE.greaterThan(subq.STOP_SEQUENCE))
-                        .and(STOP_TIME.TRIP_ID.eq(subq.TRIP_ID))
-                        .and(subq.FEED_VERSION.eq(this.feedVersion)))
-                .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion)))
-                .and(STOP.STOP_NAME.like("%"+like+"%")).orderBy(STOP.STOP_NAME.asc()).fetch(); //todo records may be truncated after 50 rows
-        if (f == Format.JSON){
-            return withoutFormat.formatJSON(jf);
-        }else return withoutFormat.toString();
-//        select distinct stop_id from stop_time where exists(select * from stop_time as st2 where stop_id = 2428685 and stop_time.stop_sequence > st2.stop_sequence and stop_time.trip_id = st2.trip_id);
-    }
+//    private String getDestinations(String like, Format f) {
+//        StopTime subq = STOP_TIME.as("sq");
+//        Result withoutFormat = this.applyRoute(dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)))
+//                .whereExists(dsl.selectFrom(subq)
+//                        .where(subq.STOP_ID.eq(this.origin))
+//                        .and(STOP_TIME.STOP_SEQUENCE.greaterThan(subq.STOP_SEQUENCE))
+//                        .and(STOP_TIME.TRIP_ID.eq(subq.TRIP_ID))
+//                        .and(subq.FEED_VERSION.eq(this.feedVersion)))
+//                .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion)))
+//                .and(STOP.STOP_NAME.like("%"+like+"%")).orderBy(STOP.STOP_NAME.asc()).fetch(); //todo records may be truncated after 50 rows
+//        if (f == Format.JSON){
+//            return withoutFormat.formatJSON(jf);
+//        }else return withoutFormat.toString();
+////        select distinct stop_id from stop_time where exists(select * from stop_time as st2 where stop_id = 2428685 and stop_time.stop_sequence > st2.stop_sequence and stop_time.trip_id = st2.trip_id);
+//    }
 
 
     //        trip_id in
@@ -254,13 +287,9 @@ public class FeedTable {
 //                stop_sequence = 1 and
 //        route.route_id = 9505)
 
-    private SelectConditionStep applyRoute(SelectConditionStep<Record2<String, String>> withoutRoute) {
+    private SelectConditionStep applyRoute(SelectConditionStep<Record3<String, String, String>> withoutRoute) {
         if (route != null){
-            return withoutRoute
-                    .and(STOP_TIME.TRIP_ID.in(this.dsl.select(STOP_TIME.TRIP_ID).from(STOP_TIME.leftJoin(TRIP.leftJoin(ROUTE).on(TRIP.ROUTE_ID.eq(ROUTE.ROUTE_ID))).on(STOP_TIME.TRIP_ID.eq(TRIP.TRIP_ID)))
-                        .where(STOP_TIME.STOP_ID.eq(this.origin))
-                        .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion))))
-                    .and(ROUTE.ROUTE_ID.eq(this.route));
+            return withoutRoute.and(TRIP.ROUTE_ID.eq(this.route));
         }else return withoutRoute;
 //
 
