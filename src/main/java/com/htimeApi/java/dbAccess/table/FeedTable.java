@@ -76,7 +76,7 @@ public class FeedTable {
         StopTime subq1 = STOP_TIME.as("sq1");
         StopTime subq2 = STOP_TIME.as("sq2");
 
-        SelectConditionStep req = this.applyRoute(dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME,TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq1.TRIP_ID.eq(subq2.TRIP_ID)).and(subq2.STOP_ID.eq(this.origin)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)));
+        SelectConditionStep req = this.applyRoute(dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME,TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq1.TRIP_ID.eq(subq2.TRIP_ID)).and(subq2.STOP_ID.eq(this.origin)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)).and(subq1.FEED_VERSION.eq(this.feedVersion)));
 //                dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME).from(subq1.leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)))
 //                        .where
 //                                ((subq1.TRIP_ID.in(dsl.select(STOP_TIME.TRIP_ID).from(STOP_TIME).where(STOP_TIME.STOP_ID.eq(this.origin)).and(subq1.FEED_VERSION.eq(this.feedVersion)))))
@@ -188,59 +188,59 @@ public class FeedTable {
 //            -- and route_id = 9507
 //            );*/
 
-    public String getTimetable() { //todo make sure this takes routes into account
-        StopTime subq = STOP_TIME.as("subq");
+//    public String getTimetable() { //todo make sure this takes routes into account
+//        StopTime subq = STOP_TIME.as("subq");
+//
+//        SelectConditionStep<StopTimeRecord> withoutRoute =
+//                dsl.selectFrom(STOP_TIME)
+//                    .where(STOP_TIME.STOP_ID.eq(origin))
+//                    .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion))
+//                    .andExists(dsl.selectFrom(subq)
+//                        .where(STOP_TIME.TRIP_ID.eq(subq.TRIP_ID))
+//                        .and(STOP_TIME.STOP_SEQUENCE.lessThan(subq.STOP_SEQUENCE))
+//                        .and(subq.STOP_ID.eq(dest))
+//                        .and(subq.FEED_VERSION.eq(this.feedVersion)))
+//                    .and(STOP_TIME.TRIP_ID
+//                        .in(dsl.select(TRIP.TRIP_ID).from(TRIP)
+//                            .where(TRIP.SERVICE_ID
+//                                .in(dsl.select(SERVICE.SERVICE_ID).from(SERVICE)
+//                                    .whereExists(dsl.selectFrom(SERVICE_EXCEPTION)
+//                                        .where((SERVICE_EXCEPTION.DATE.eq(this.dateString()))
+//                                        .and(SERVICE.SERVICE_ID.eq(SERVICE_EXCEPTION.SERVICE_ID))
+//                                        .and(SERVICE_EXCEPTION.EXCEPTION_TYPE.eq(UByte.valueOf(1)))
+//                                        .and(SERVICE_EXCEPTION.FEED_VERSION.eq(this.feedVersion)))
+//                                    .and(SERVICE.FEED_VERSION.eq(this.feedVersion)))
+//                                    .or((DSL.val(UInteger.valueOf(this.dateString())).between(SERVICE.START_DATE.cast(SQLDataType.INTEGERUNSIGNED)).and(SERVICE.END_DATE.cast(SQLDataType.INTEGERUNSIGNED)))
+//                                        .and(this.weekdays.get(this.date.get(Calendar.DAY_OF_WEEK)).eq((byte) 1))
+//                                        .andNotExists(dsl.selectFrom(SERVICE_EXCEPTION)
+//                                                .where(SERVICE_EXCEPTION.DATE.eq(this.dateString()))
+//                                                .and(SERVICE.SERVICE_ID.eq(SERVICE_EXCEPTION.SERVICE_ID))
+//                                                .and(SERVICE_EXCEPTION.EXCEPTION_TYPE.eq(UByte.valueOf(2)))
+//                                                .and(SERVICE_EXCEPTION.FEED_VERSION.eq(this.feedVersion))))
+//                                ))
+//                            .and(TRIP.FEED_VERSION.eq(this.feedVersion))));
+//
+//        if (this.route != null){
+//            return withoutRoute
+//                    .and(STOP_TIME.TRIP_ID.in(dsl.select(TRIP.TRIP_ID)
+//                        .where(TRIP.ROUTE_ID.eq(this.route))
+//                        .and(TRIP.FEED_VERSION.eq(this.feedVersion)))).fetch().formatJSON(jf);
+//        } else return withoutRoute.fetch().formatJSON(jf);
+//    }
 
-        SelectConditionStep<StopTimeRecord> withoutRoute =
-                dsl.selectFrom(STOP_TIME)
-                    .where(STOP_TIME.STOP_ID.eq(origin))
-                    .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion))
-                    .andExists(dsl.selectFrom(subq)
-                        .where(STOP_TIME.TRIP_ID.eq(subq.TRIP_ID))
-                        .and(STOP_TIME.STOP_SEQUENCE.lessThan(subq.STOP_SEQUENCE))
-                        .and(subq.STOP_ID.eq(dest))
-                        .and(subq.FEED_VERSION.eq(this.feedVersion)))
-                    .and(STOP_TIME.TRIP_ID
-                        .in(dsl.select(TRIP.TRIP_ID).from(TRIP)
-                            .where(TRIP.SERVICE_ID
-                                .in(dsl.select(SERVICE.SERVICE_ID).from(SERVICE)
-                                    .whereExists(dsl.selectFrom(SERVICE_EXCEPTION)
-                                        .where((SERVICE_EXCEPTION.DATE.eq(this.dateString()))
-                                        .and(SERVICE.SERVICE_ID.eq(SERVICE_EXCEPTION.SERVICE_ID))
-                                        .and(SERVICE_EXCEPTION.EXCEPTION_TYPE.eq(UByte.valueOf(1)))
-                                        .and(SERVICE_EXCEPTION.FEED_VERSION.eq(this.feedVersion)))
-                                    .and(SERVICE.FEED_VERSION.eq(this.feedVersion)))
-                                    .or((DSL.val(UInteger.valueOf(this.dateString())).between(SERVICE.START_DATE.cast(SQLDataType.INTEGERUNSIGNED)).and(SERVICE.END_DATE.cast(SQLDataType.INTEGERUNSIGNED)))
-                                        .and(this.weekdays.get(this.date.get(Calendar.DAY_OF_WEEK)).eq((byte) 1))
-                                        .andNotExists(dsl.selectFrom(SERVICE_EXCEPTION)
-                                                .where(SERVICE_EXCEPTION.DATE.eq(this.dateString()))
-                                                .and(SERVICE.SERVICE_ID.eq(SERVICE_EXCEPTION.SERVICE_ID))
-                                                .and(SERVICE_EXCEPTION.EXCEPTION_TYPE.eq(UByte.valueOf(2)))
-                                                .and(SERVICE_EXCEPTION.FEED_VERSION.eq(this.feedVersion))))
-                                ))
-                            .and(TRIP.FEED_VERSION.eq(this.feedVersion))));
+//    public String getStops(String like) {
+//        return this.getStops(like, Format.PLAIN);
+//    }
 
-        if (this.route != null){
-            return withoutRoute
-                    .and(STOP_TIME.TRIP_ID.in(dsl.select(TRIP.TRIP_ID)
-                        .where(TRIP.ROUTE_ID.eq(this.route))
-                        .and(TRIP.FEED_VERSION.eq(this.feedVersion)))).fetch().formatJSON(jf);
-        } else return withoutRoute.fetch().formatJSON(jf);
-    }
-
-    public String getStops(String like) {
-        return this.getStops(like, Format.PLAIN);
-    }
-
-    private String getStops(String like, Format f) {
-        //todo make sure this takes routes into account
-        Result withoutFormat = this.applyRouteStops(dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)))
-                .where(STOP.STOP_NAME.like("%"+like+"%"))
-                .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion))).fetch();
-        if(f == Format.JSON){
-            return withoutFormat.formatJSON(jf);
-        } else return withoutFormat.toString();
-    }
+//    private String getStops(String like, Format f) {
+//        //todo make sure this takes routes into account
+//        Result withoutFormat = this.applyRouteStops(dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)))
+//                .where(STOP.STOP_NAME.like("%"+like+"%"))
+//                .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion))).fetch();
+//        if(f == Format.JSON){
+//            return withoutFormat.formatJSON(jf);
+//        } else return withoutFormat.toString();
+//    }
 
     private <R extends Record> SelectConditionStep applyRouteStops(SelectConditionStep<Record2<String, String>> where) {
         if(this.route != null){

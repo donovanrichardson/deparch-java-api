@@ -175,8 +175,8 @@ public class BostonController {
                 result.put("route", dsl.selectFrom(ROUTE).where(ROUTE.ROUTE_ID.eq(routeId)).and(ROUTE.FEED_VERSION.eq(this.feedVersion)).fetchOneMap());
             }
 
-            result.put("origin", dsl.selectFrom(STOP).where(STOP.STOP_ID.eq(origin)).fetchOneMap());
-            result.put("destination", dsl.selectFrom(STOP).where(STOP.STOP_ID.eq(dest)).fetchOneMap());
+            result.put("origin", dsl.selectFrom(STOP).where(STOP.STOP_ID.eq(origin)).and(STOP.FEED_VERSION.eq(this.feedVersion)).fetchOneMap());
+            result.put("destination", dsl.selectFrom(STOP).where(STOP.STOP_ID.eq(dest)).and(STOP.FEED_VERSION.eq(this.feedVersion)).fetchOneMap());
             result.put("result", ft.getTimetableMaps());
             result.put("date", ft.dateString());
             return result;
