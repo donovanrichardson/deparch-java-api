@@ -7,10 +7,12 @@ import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultConfiguration;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
@@ -185,6 +187,11 @@ public class BostonController {
             dsl.close();
         }
 
+    }
+
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
     }
 
 }
