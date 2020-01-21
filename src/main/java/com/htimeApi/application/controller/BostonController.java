@@ -189,9 +189,9 @@ public class BostonController {
 
     }
 
-    @ModelAttribute
-    public void setVaryResponseHeader(HttpServletResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*");
-    }
+//    @ModelAttribute
+//    public void setVaryResponseHeader(HttpServletResponse response) {
+//        response.setHeader("Access-Control-Allow-Origin", "*");
+//    }
 
 }
