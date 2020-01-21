@@ -9,7 +9,6 @@ import com.schema.Indexes;
 import com.schema.Keys;
 import com.schema.tables.records.StopTimeRecord;
 
-import java.sql.Time;
 import java.util.Arrays;
 import java.util.List;
 
@@ -43,7 +42,7 @@ import org.jooq.types.UInteger;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class StopTime extends TableImpl<StopTimeRecord> {
 
-    private static final long serialVersionUID = -2037361942;
+    private static final long serialVersionUID = 12266511;
 
     /**
      * The reference instance of <code>gtfs.stop_time</code>
@@ -66,12 +65,12 @@ public class StopTime extends TableImpl<StopTimeRecord> {
     /**
      * The column <code>gtfs.stop_time.arrival_time</code>.
      */
-    public final TableField<StopTimeRecord, Time> ARRIVAL_TIME = createField("arrival_time", org.jooq.impl.SQLDataType.TIME, this, "");
+    public final TableField<StopTimeRecord, String> ARRIVAL_TIME = createField("arrival_time", org.jooq.impl.SQLDataType.CHAR(8), this, "");
 
     /**
      * The column <code>gtfs.stop_time.departure_time</code>.
      */
-    public final TableField<StopTimeRecord, Time> DEPARTURE_TIME = createField("departure_time", org.jooq.impl.SQLDataType.TIME, this, "");
+    public final TableField<StopTimeRecord, String> DEPARTURE_TIME = createField("departure_time", org.jooq.impl.SQLDataType.CHAR(8), this, "");
 
     /**
      * The column <code>gtfs.stop_time.stop_id</code>.
