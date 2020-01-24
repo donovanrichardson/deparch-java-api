@@ -168,7 +168,7 @@ The above copyright notice and this permission notice shall be included in all c
                         <driver>com.mysql.cj.jdbc.Driver</driver>
                         <url>jdbc:mysql://database-1.c2skpltdp2me.us-east-2.rds.amazonaws.com:3306/gtfs?autoReconnect=true&amp;useSSL=false&amp;useUnicode=true&amp;useLegacyDatetimeCode=false&amp;autoCommit=false&amp;relaxAutoCommit=true</url> <!--(I set mysql to EST (try &amp;serverTimezone=EST if this doesn't work); set yours to appropriate timezone)-->
                         <user>api</user>
-                        <password>apipassword</password>
+                        <password>${env.DEPARCH}</password>
 
                         <!-- You can also pass user/password and other JDBC properties in the optional properties tag: -->
                         <!--<properties>
