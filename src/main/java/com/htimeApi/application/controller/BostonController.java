@@ -29,7 +29,8 @@ public class BostonController {
     String feedVersion;
 
     DSLContext connect() throws SQLException {
-        java.sql.Connection conn = DriverManager.getConnection("jdbc:mysql://database-1.c2skpltdp2me.us-east-2.rds.amazonaws.com:3306/gtfs?autoReconnect=true&useSSL=false&useUnicode=true&useLegacyDatetimeCode=false&autoCommit=false&relaxAutoCommit=true", "api", "apipassword"); //In earlier version I was causing the time zones to be switched without warrant.
+        String password = System.getenv("DEPARCH");
+        java.sql.Connection conn = DriverManager.getConnection("jdbc:mysql://database-1.c2skpltdp2me.us-east-2.rds.amazonaws.com:3306/gtfs?autoReconnect=true&useSSL=false&useUnicode=true&useLegacyDatetimeCode=false&autoCommit=false&relaxAutoCommit=true", "api", password); //In earlier version I was causing the time zones to be switched without warrant.
         Configuration conf = new DefaultConfiguration().set(conn).set(SQLDialect.MYSQL_8_0);
         ConnectionImpl cImpl = (ConnectionImpl)conf.connectionProvider().acquire();
         cImpl.getSession().getServerSession().setAutoCommit(false);
