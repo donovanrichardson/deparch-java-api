@@ -28,15 +28,18 @@ public class BostonController {
     String feedId = "mbta/64";
     String feedVersion;
 
-    DSLContext connect() throws SQLException {
-        String password = System.getenv("DEPARCH");
-        java.sql.Connection conn = DriverManager.getConnection("jdbc:mysql://database-1.c2skpltdp2me.us-east-2.rds.amazonaws.com:3306/gtfs?autoReconnect=true&useSSL=false&useUnicode=true&useLegacyDatetimeCode=false&autoCommit=false&relaxAutoCommit=true", "api", password); //In earlier version I was causing the time zones to be switched without warrant.
-        Configuration conf = new DefaultConfiguration().set(conn).set(SQLDialect.MYSQL_8_0);
-        ConnectionImpl cImpl = (ConnectionImpl)conf.connectionProvider().acquire();
-        cImpl.getSession().getServerSession().setAutoCommit(false);
-        Configuration conf2 = new DefaultConfiguration().set(cImpl).set(SQLDialect.MYSQL_8_0);
-        DSLContext dsl = DSL.using(conf2);
-        return dsl;
+    class DSLWrapper{
+        DSLContext dsl;
+        java.sql.Connection conn;
+        DSLWrapper() throws SQLException{
+            String password = System.getenv("DEPARCH");
+            this.conn = DriverManager.getConnection("jdbc:mysql://database-1.c2skpltdp2me.us-east-2.rds.amazonaws.com:3306/gtfs?autoReconnect=true&useSSL=false&useUnicode=true&useLegacyDatetimeCode=false&autoCommit=false&relaxAutoCommit=true", "api", password); //In earlier version I was causing the time zones to be switched without warrant.
+            Configuration conf = new DefaultConfiguration().set(conn).set(SQLDialect.MYSQL_8_0);
+            ConnectionImpl cImpl = (ConnectionImpl)conf.connectionProvider().acquire();
+            cImpl.getSession().getServerSession().setAutoCommit(false);
+            Configuration conf2 = new DefaultConfiguration().set(cImpl).set(SQLDialect.MYSQL_8_0);
+            this.dsl = DSL.using(conf2);
+        }
     }
 
     @RequestMapping("/routes")
@@ -44,8 +47,10 @@ public class BostonController {
     public List<Map<String, Object>> routes(@RequestParam(value = "name", required = false) String name ) {
 
         DSLContext dsl;
+        DSLWrapper w;
         try{
-            dsl = this.connect();
+            w = new DSLWrapper();
+            dsl = w.dsl;
         } catch (SQLException e) {
             e.printStackTrace();
             List error = new ArrayList<Map<String, Object>>();
@@ -58,15 +63,22 @@ public class BostonController {
         try{
             this.feedVersion = dsl.select(FEED.LATEST).from(FEED).where(FEED.ID.eq(this.feedId)).fetchOne(FEED.LATEST);
 
+            List<Map<String,Object>> res;
             if (name != null){
-                return dsl.selectFrom(ROUTE).where(ROUTE.DEFAULT_NAME.like("%"+name+"%")).and(ROUTE.FEED_VERSION.eq(this.feedVersion)).fetchMaps();
+                res = dsl.selectFrom(ROUTE).where(ROUTE.DEFAULT_NAME.like("%"+name+"%")).and(ROUTE.FEED_VERSION.eq(this.feedVersion)).fetchMaps();
 
             }else{
-                return dsl.selectFrom(ROUTE).where(ROUTE.FEED_VERSION.eq(this.feedVersion)).fetchMaps();
+                res = dsl.selectFrom(ROUTE).where(ROUTE.FEED_VERSION.eq(this.feedVersion)).fetchMaps();
             }
-
-        }catch(Exception e){
-            throw e;
+            w.conn.close();
+            return res;
+            //todo make sure to specify feed_version
+        }catch(SQLException e){
+            List<Map<String,Object>> excl = new ArrayList();
+            Map<String,Object> exc = new HashMap<>();
+            exc.put("exception", "SQLException");
+            excl.add(exc);
+            return excl;
         }finally{
             dsl.close();
         }
@@ -79,8 +91,10 @@ public class BostonController {
     @ResponseBody
     public List<Map<String, Object>> stops(@RequestParam(value= "routeId", required = false) String routeId, @RequestParam(value = "name", required = false) String name ) {
         DSLContext dsl;
+        DSLWrapper w;
         try{
-            dsl = this.connect();
+            w = new DSLWrapper();
+            dsl = w.dsl;
         } catch (SQLException e) {
             e.printStackTrace();
             List error = new ArrayList<Map<String, Object>>();
@@ -98,11 +112,19 @@ public class BostonController {
             if (routeId != null){
                 ft.setRoute(routeId);
             }
+            List<Map<String,Object>> res;
             if (name != null){
-                return ft.getStopsMaps(name);//todo return more info from this method
-            }else return ft.getStopsMaps("");
-        }catch(Exception e){
-            throw e;
+                res = ft.getStopsMaps(name);//todo return more info from this method
+            }else res = ft.getStopsMaps("");
+            w.conn.close();
+            return res;
+            //todo make sure to specify feed_version
+        }catch(SQLException e){
+            List<Map<String,Object>> excl = new ArrayList();
+            Map<String,Object> exc = new HashMap<>();
+            exc.put("exception", "SQLException");
+            excl.add(exc);
+            return excl;
         }finally{
             dsl.close();
         }
@@ -114,8 +136,10 @@ public class BostonController {
     @ResponseBody
     public List<Map<String, Object>> dests(@RequestParam(value= "origin") String origin, @RequestParam(value= "routeId", required = false) String routeId, @RequestParam(value = "name", required = false) String name ) {
         DSLContext dsl;
+        DSLWrapper w = null;
         try{
-            dsl = this.connect();
+            w = new DSLWrapper();
+            dsl = w.dsl;
         } catch (SQLException e) {
             e.printStackTrace();
             List error = new ArrayList<Map<String, Object>>();
@@ -135,11 +159,19 @@ public class BostonController {
             if (routeId != null){
                 ft.setRoute(routeId);
             }
+            List<Map<String,Object>> res;
             if (name != null){
-                return ft.getDestinationsMaps(name);
-            } else return ft.getDestinationsMaps("");
-        }catch(Exception e){
-            throw e;
+                res = ft.getDestinationsMaps(name);
+            } else res = ft.getDestinationsMaps("");
+            w.conn.close();
+            return res;
+            //todo make sure to specify feed_version
+        }catch(SQLException e){
+            List<Map<String,Object>> excl = new ArrayList();
+            Map<String,Object> exc = new HashMap<>();
+            exc.put("exception", "SQLException");
+            excl.add(exc);
+            return excl;
         }finally{
             dsl.close();
         }
@@ -147,10 +179,12 @@ public class BostonController {
 
     @RequestMapping("/timetable")
     @ResponseBody
-    public Map<String,Object> timetable(@RequestParam(value= "origin") String origin, @RequestParam(value= "dest") String dest, @RequestParam(value= "route", required = false) String routeId, @RequestParam(value= "year") int year, @RequestParam(value= "month") int month, @RequestParam(value= "date") int date) {
+    public Map<String,Object> timetable(@RequestParam(value= "origin") String origin, @RequestParam(value= "dest") String dest, @RequestParam(value= "route", required = false) String routeId, @RequestParam(value= "year") int year, @RequestParam(value= "month") int month, @RequestParam(value= "date") int date) throws SQLException {
         DSLContext dsl;
+        DSLWrapper w = null;
         try{
-            dsl = this.connect();
+            w = new DSLWrapper();
+            dsl = w.dsl;
         } catch (SQLException e) {
             e.printStackTrace();
 //            List error = new ArrayList<Map<String, Object>>();
@@ -180,19 +214,22 @@ public class BostonController {
             result.put("destination", dsl.selectFrom(STOP).where(STOP.STOP_ID.eq(dest)).and(STOP.FEED_VERSION.eq(this.feedVersion)).fetchOneMap());
             result.put("result", ft.getTimetableMaps());
             result.put("date", ft.dateString());
+            w.conn.close();
             return result;
             //todo make sure to specify feed_version
-        }catch(Exception e){
-            throw e;
+        }catch(SQLException e){
+            Map<String,Object> exc = new HashMap<>();
+            exc.put("exception", "SQLException");
+            return exc;
         }finally{
             dsl.close();
         }
 
     }
 
-//    @ModelAttribute
-//    public void setVaryResponseHeader(HttpServletResponse response) {
-//        response.setHeader("Access-Control-Allow-Origin", "*");
-//    }
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "https://donovanrichardson.github.io");
+    }
 
 }

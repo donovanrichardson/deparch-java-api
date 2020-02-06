@@ -42,7 +42,7 @@ import org.jooq.types.UInteger;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class StopTime extends TableImpl<StopTimeRecord> {
 
-    private static final long serialVersionUID = 12266511;
+    private static final long serialVersionUID = 1034987083;
 
     /**
      * The reference instance of <code>gtfs.stop_time</code>
@@ -182,11 +182,7 @@ public class StopTime extends TableImpl<StopTimeRecord> {
      */
     @Override
     public List<ForeignKey<StopTimeRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<StopTimeRecord, ?>>asList(Keys.STOP_TIME_IBFK_1, Keys.STOP_TIME_FEED_VERSION_FK);
-    }
-
-    public Stop stop() {
-        return new Stop(this, Keys.STOP_TIME_IBFK_1);
+        return Arrays.<ForeignKey<StopTimeRecord, ?>>asList(Keys.STOP_TIME_FEED_VERSION_FK);
     }
 
     public FeedVersion feedVersion() {

@@ -42,7 +42,7 @@ import org.jooq.types.UInteger;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Frequency extends TableImpl<FrequencyRecord> {
 
-    private static final long serialVersionUID = 1559719377;
+    private static final long serialVersionUID = 961319186;
 
     /**
      * The reference instance of <code>gtfs.frequency</code>
@@ -157,11 +157,7 @@ public class Frequency extends TableImpl<FrequencyRecord> {
      */
     @Override
     public List<ForeignKey<FrequencyRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<FrequencyRecord, ?>>asList(Keys.FREQUENCY_IBFK_1, Keys.FREQUENCY_FEED_VERSION_FK);
-    }
-
-    public Trip trip() {
-        return new Trip(this, Keys.FREQUENCY_IBFK_1);
+        return Arrays.<ForeignKey<FrequencyRecord, ?>>asList(Keys.FREQUENCY_FEED_VERSION_FK);
     }
 
     public FeedVersion feedVersion() {

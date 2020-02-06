@@ -41,7 +41,7 @@ import org.jooq.types.UByte;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ServiceException extends TableImpl<ServiceExceptionRecord> {
 
-    private static final long serialVersionUID = 43814896;
+    private static final long serialVersionUID = 1131747019;
 
     /**
      * The reference instance of <code>gtfs.service_exception</code>
@@ -146,11 +146,7 @@ public class ServiceException extends TableImpl<ServiceExceptionRecord> {
      */
     @Override
     public List<ForeignKey<ServiceExceptionRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<ServiceExceptionRecord, ?>>asList(Keys.SERVICE_EXCEPTION_IBFK_1, Keys.SERVICE_EXCEPTION_FEED_VERSION_FK);
-    }
-
-    public Service service() {
-        return new Service(this, Keys.SERVICE_EXCEPTION_IBFK_1);
+        return Arrays.<ForeignKey<ServiceExceptionRecord, ?>>asList(Keys.SERVICE_EXCEPTION_FEED_VERSION_FK);
     }
 
     public FeedVersion feedVersion() {

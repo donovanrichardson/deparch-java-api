@@ -40,7 +40,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Trip extends TableImpl<TripRecord> {
 
-    private static final long serialVersionUID = 425838700;
+    private static final long serialVersionUID = 480340555;
 
     /**
      * The reference instance of <code>gtfs.trip</code>
@@ -180,19 +180,7 @@ public class Trip extends TableImpl<TripRecord> {
      */
     @Override
     public List<ForeignKey<TripRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<TripRecord, ?>>asList(Keys.TRIP_IBFK_1, Keys.TRIP_IBFK_2, Keys.TRIP_IBFK_3, Keys.TRIP_FEED_VERSION_FK);
-    }
-
-    public Route route() {
-        return new Route(this, Keys.TRIP_IBFK_1);
-    }
-
-    public Service service() {
-        return new Service(this, Keys.TRIP_IBFK_2);
-    }
-
-    public Shape shape() {
-        return new Shape(this, Keys.TRIP_IBFK_3);
+        return Arrays.<ForeignKey<TripRecord, ?>>asList(Keys.TRIP_FEED_VERSION_FK);
     }
 
     public FeedVersion feedVersion() {
