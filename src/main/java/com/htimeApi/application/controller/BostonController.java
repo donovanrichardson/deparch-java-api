@@ -65,10 +65,10 @@ public class BostonController {
 
             List<Map<String,Object>> res;
             if (name != null){
-                res = dsl.selectFrom(ROUTE).where(ROUTE.DEFAULT_NAME.like("%"+name+"%")).and(ROUTE.FEED_VERSION.eq(this.feedVersion)).fetchMaps();
+                res = dsl.selectFrom(ROUTE).where(ROUTE.DEFAULT_NAME.like("%"+name+"%")).and(ROUTE.FEED_VERSION.eq(this.feedVersion)).orderBy(ROUTE.ROUTE_SORT_ORDER).fetchMaps();
 
             }else{
-                res = dsl.selectFrom(ROUTE).where(ROUTE.FEED_VERSION.eq(this.feedVersion)).fetchMaps();
+                res = dsl.selectFrom(ROUTE).where(ROUTE.FEED_VERSION.eq(this.feedVersion)).orderBy(ROUTE.ROUTE_SORT_ORDER).fetchMaps(); //todo abstract this maybe, so no have to do copy-paste
             }
             w.conn.close();
             return res;
