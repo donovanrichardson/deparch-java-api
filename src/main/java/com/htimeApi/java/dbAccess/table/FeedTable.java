@@ -52,8 +52,8 @@ public class FeedTable {
 //  join trip on stop_time.trip_id = trip.trip_id where route_id = 39;
 
         SelectConditionStep notYetMaps = this.applyRouteStops(dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)).leftJoin(TRIP).on(STOP_TIME.TRIP_ID.eq(TRIP.TRIP_ID)))
-                .where(STOP.STOP_NAME.like("%"+like+"%"))
-                .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion)));
+//                .where(STOP.STOP_NAME.like("%"+like+"%")) //todo this makes it take way too long. a beginning-of-string search is much more efficient
+                .where(STOP_TIME.FEED_VERSION.eq(this.feedVersion)));
         return notYetMaps.fetchMaps();
     }
 
