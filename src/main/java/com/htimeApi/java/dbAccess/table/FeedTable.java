@@ -129,6 +129,7 @@ public class FeedTable {
                                                                 .and(SERVICE.FEED_VERSION.eq(this.feedVersion)))
                                                         .or((DSL.val(UInteger.valueOf(this.dateString())).between(SERVICE.START_DATE.cast(SQLDataType.INTEGERUNSIGNED)).and(SERVICE.END_DATE.cast(SQLDataType.INTEGERUNSIGNED)))
                                                                 .and(this.weekdays.get(this.date.get(Calendar.DAY_OF_WEEK)).eq((byte) 1))
+                                                                .and(SERVICE.FEED_VERSION.eq(this.feedVersion))
                                                                 .andNotExists(dsl.selectFrom(SERVICE_EXCEPTION)
                                                                         .where(SERVICE_EXCEPTION.DATE.eq(this.dateString()))
                                                                         .and(SERVICE.SERVICE_ID.eq(SERVICE_EXCEPTION.SERVICE_ID))
@@ -139,7 +140,7 @@ public class FeedTable {
 
         if (this.route != null){
             return withoutRoute
-                    .and(STOP_TIME.TRIP_ID.in(dsl.select(TRIP.TRIP_ID).from(TRIP)
+                    .and(subq1.TRIP_ID.in(dsl.select(TRIP.TRIP_ID).from(TRIP)
                             .where(TRIP.ROUTE_ID.eq(this.route)))).orderBy(subq2.DEPARTURE_TIME).fetchMaps();
         } else return withoutRoute.orderBy(subq2.DEPARTURE_TIME).fetchMaps();
 

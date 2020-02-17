@@ -179,7 +179,7 @@ public class BostonController {
 
     @RequestMapping("/timetable")
     @ResponseBody
-    public Map<String,Object> timetable(@RequestParam(value= "origin") String origin, @RequestParam(value= "dest") String dest, @RequestParam(value= "route", required = false) String routeId, @RequestParam(value= "year") int year, @RequestParam(value= "month") int month, @RequestParam(value= "date") int date) throws SQLException {
+    public Map<String,Object> timetable(@RequestParam(value= "origin") String origin, @RequestParam(value= "dest") String dest, @RequestParam(value= "routeId", required = false) String routeId, @RequestParam(value= "year") int year, @RequestParam(value= "month") int month, @RequestParam(value= "date") int date) throws SQLException {
         DSLContext dsl;
         DSLWrapper w = null;
         try{
