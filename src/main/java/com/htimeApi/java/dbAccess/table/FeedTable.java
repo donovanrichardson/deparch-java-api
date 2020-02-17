@@ -1,6 +1,5 @@
 package com.htimeApi.java.dbAccess.table;
 
-import com.schema.tables.Stop;
 import com.schema.tables.StopTime;
 import com.schema.tables.records.ServiceRecord;
 import com.schema.tables.records.StopTimeRecord;
@@ -12,6 +11,7 @@ import org.jooq.types.UInteger;
 
 import java.util.*;
 
+import static com.schema.tables.Route.ROUTE;
 import static com.schema.tables.Service.SERVICE;
 import static com.schema.tables.ServiceException.SERVICE_EXCEPTION;
 import static com.schema.tables.Stop.STOP;
@@ -51,7 +51,7 @@ public class FeedTable {
 //  on `gtfs`.`stop`.`stop_id` = `gtfs`.`stop_time`.`stop_id`
 //  join trip on stop_time.trip_id = trip.trip_id where route_id = 39;
 
-        SelectConditionStep notYetMaps = this.applyRouteStops(dsl.selectDistinct(STOP.STOP_NAME, STOP.PARENT_STATION.as("stop_id")).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)).leftJoin(TRIP).on(STOP_TIME.TRIP_ID.eq(TRIP.TRIP_ID)))
+        SelectConditionStep notYetMaps = this.applyRouteStops(dsl.selectDistinct(STOP_TIME.STOP_ID, STOP.STOP_NAME).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)).leftJoin(TRIP).on(STOP_TIME.TRIP_ID.eq(TRIP.TRIP_ID)))
 //                .where(STOP.STOP_NAME.like("%"+like+"%")) //todo this makes it take way too long. a beginning-of-string search is much more efficient
                 .where(STOP_TIME.FEED_VERSION.eq(this.feedVersion)));
         return notYetMaps.fetchMaps();
@@ -73,14 +73,10 @@ public class FeedTable {
 //  right join (select stop_sequence, trip_id from stop_time where stop_id = '31391') as sq2 on sq1.trip_id = sq2.trip_id
 //  where sq1.stop_sequence > sq2.stop_sequence;
 
-        Stop stop2 = STOP.as("stop2");
-        Stop parentStop1 = STOP.as("ps1");
-        Stop parentStop2 = STOP.as("ps2");
         StopTime subq1 = STOP_TIME.as("sq1");
         StopTime subq2 = STOP_TIME.as("sq2");
 
-        SelectConditionStep req = this.applyRoute(dsl.selectDistinct(parentStop1.STOP_ID, parentStop1.STOP_NAME, TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(parentStop1).on(STOP.PARENT_STATION.eq(parentStop1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq2.TRIP_ID.eq(subq1.TRIP_ID)).leftJoin(stop2).on(subq2.STOP_ID.eq(stop2.STOP_ID)).leftJoin(parentStop2).on(stop2.PARENT_STATION.eq(parentStop2.STOP_ID)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)).and(parentStop2.STOP_ID.eq(this.origin)).and(subq1.FEED_VERSION.eq(this.feedVersion)).and(subq2.FEED_VERSION.eq(this.feedVersion)));
-//                dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME,TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq1.TRIP_ID.eq(subq2.TRIP_ID)).and(subq2.STOP_ID.eq(this.origin)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)).and(subq1.FEED_VERSION.eq(this.feedVersion)));
+        SelectConditionStep req = this.applyRoute(dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME,TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq1.TRIP_ID.eq(subq2.TRIP_ID)).and(subq2.STOP_ID.eq(this.origin)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)).and(subq1.FEED_VERSION.eq(this.feedVersion)));
 //                dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME).from(subq1.leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)))
 //                        .where
 //                                ((subq1.TRIP_ID.in(dsl.select(STOP_TIME.TRIP_ID).from(STOP_TIME).where(STOP_TIME.STOP_ID.eq(this.origin)).and(subq1.FEED_VERSION.eq(this.feedVersion)))))
@@ -99,12 +95,20 @@ public class FeedTable {
     }
 
     public List<Map<String, Object>> getTimetableMaps() {
-        Stop stop2 = STOP.as("stop2");
-        Stop parentStop1 = STOP.as("ps1");
-        Stop parentStop2 = STOP.as("ps2");
-        StopTime subq1 = STOP_TIME.as("sq1");
-        StopTime subq2 = STOP_TIME.as("sq2");
-        SelectConditionStep<StopTimeRecord> withoutRoute = this.applyRoute(dsl.selectDistinct(subq2.DEPARTURE_TIME, parentStop2.STOP_NAME.as("from"), parentStop1.STOP_NAME.as("to"), TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(parentStop1).on(STOP.PARENT_STATION.eq(parentStop1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq2.TRIP_ID.eq(subq1.TRIP_ID)).leftJoin(stop2).on(subq2.STOP_ID.eq(stop2.STOP_ID)).leftJoin(parentStop2).on(stop2.PARENT_STATION.eq(parentStop2.STOP_ID)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)).and(parentStop2.STOP_ID.eq(this.origin)).and(parentStop1.STOP_ID.eq(dest).and(TRIP.SERVICE_ID
+        StopTime subq = STOP_TIME.as("subq");
+
+        SelectConditionStep<StopTimeRecord> withoutRoute =
+                dsl.selectFrom(STOP_TIME)
+                        .where(STOP_TIME.STOP_ID.eq(origin))
+                        .and(STOP_TIME.FEED_VERSION.eq(this.feedVersion))
+                        .andExists(dsl.selectFrom(subq)
+                                .where(STOP_TIME.TRIP_ID.eq(subq.TRIP_ID))
+                                .and(STOP_TIME.STOP_SEQUENCE.lessThan(subq.STOP_SEQUENCE))
+                                .and(subq.STOP_ID.eq(dest))
+                                .and(subq.FEED_VERSION.eq(this.feedVersion)))
+                        .and(STOP_TIME.TRIP_ID
+                                .in(dsl.select(TRIP.TRIP_ID).from(TRIP)
+                                        .where(TRIP.SERVICE_ID
                                                 .in(dsl.select(SERVICE.SERVICE_ID).from(SERVICE)
                                                         .whereExists(dsl.selectFrom(SERVICE_EXCEPTION)
                                                                 .where((SERVICE_EXCEPTION.DATE.eq(this.dateString()))
@@ -126,10 +130,8 @@ public class FeedTable {
             return withoutRoute
                     .and(STOP_TIME.TRIP_ID.in(dsl.select(TRIP.TRIP_ID).from(TRIP)
                             .where(TRIP.ROUTE_ID.eq(this.route))
-                            .and(subq1.FEED_VERSION.eq(this.feedVersion))
-                            .and(subq2.FEED_VERSION.eq(this.feedVersion))
-                            .and(TRIP.FEED_VERSION.eq(this.feedVersion)))).orderBy(subq2.DEPARTURE_TIME).fetchMaps();
-        } else return withoutRoute.orderBy(subq2.DEPARTURE_TIME).fetchMaps();
+                            .and(TRIP.FEED_VERSION.eq(this.feedVersion)))).orderBy(STOP_TIME.DEPARTURE_TIME).fetchMaps();
+        } else return withoutRoute.orderBy(STOP_TIME.DEPARTURE_TIME).fetchMaps();
 
     }
     //todo (a few lines above) .and(STOP_TIME.TRIP_ID.in(dsl.select(TRIP.TRIP_ID).from(TRIP)... this used to not have "from(TRIP)" in it.... the syntax error popped out
@@ -285,7 +287,7 @@ public class FeedTable {
 //                stop_sequence = 1 and
 //        route.route_id = 9505)
 
-    private SelectConditionStep applyRoute(SelectConditionStep withoutRoute) {
+    private SelectConditionStep applyRoute(SelectConditionStep<Record3<String, String, String>> withoutRoute) {
         if (route != null){
             return withoutRoute.and(TRIP.ROUTE_ID.eq(this.route));
         }else return withoutRoute;
