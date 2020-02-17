@@ -79,7 +79,7 @@ public class FeedTable {
         StopTime subq1 = STOP_TIME.as("sq1");
         StopTime subq2 = STOP_TIME.as("sq2");
 
-        SelectConditionStep req = this.applyRoute(dsl.selectDistinct(parentStop1.STOP_ID, parentStop1.STOP_NAME, TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(parentStop1).on(STOP.PARENT_STATION.eq(parentStop1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq2.TRIP_ID.eq(subq1.TRIP_ID)).leftJoin(stop2).on(subq2.STOP_ID.eq(stop2.STOP_ID)).leftJoin(parentStop2).on(stop2.PARENT_STATION.eq(parentStop2.STOP_ID)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)).and(parentStop2.STOP_ID.eq(this.origin)));
+        SelectConditionStep req = this.applyRoute(dsl.selectDistinct(parentStop1.STOP_ID, parentStop1.STOP_NAME, TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(parentStop1).on(STOP.PARENT_STATION.eq(parentStop1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq2.TRIP_ID.eq(subq1.TRIP_ID)).leftJoin(stop2).on(subq2.STOP_ID.eq(stop2.STOP_ID)).leftJoin(parentStop2).on(stop2.PARENT_STATION.eq(parentStop2.STOP_ID)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)).and(parentStop2.STOP_ID.eq(this.origin)).and(subq1.FEED_VERSION.eq(this.feedVersion)).and(subq2.FEED_VERSION.eq(this.feedVersion)));
 //                dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME,TRIP.ROUTE_ID).from(subq1).leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)).leftJoin(TRIP).on(TRIP.TRIP_ID.eq(subq1.TRIP_ID)).rightJoin(subq2).on(subq1.TRIP_ID.eq(subq2.TRIP_ID)).and(subq2.STOP_ID.eq(this.origin)).where(subq1.STOP_SEQUENCE.greaterThan(subq2.STOP_SEQUENCE)).and(subq1.FEED_VERSION.eq(this.feedVersion)));
 //                dsl.selectDistinct(subq1.STOP_ID, STOP.STOP_NAME).from(subq1.leftJoin(STOP).on(STOP.STOP_ID.eq(subq1.STOP_ID)))
 //                        .where
@@ -126,6 +126,8 @@ public class FeedTable {
             return withoutRoute
                     .and(STOP_TIME.TRIP_ID.in(dsl.select(TRIP.TRIP_ID).from(TRIP)
                             .where(TRIP.ROUTE_ID.eq(this.route))
+                            .and(subq1.FEED_VERSION.eq(this.feedVersion))
+                            .and(subq2.FEED_VERSION.eq(this.feedVersion))
                             .and(TRIP.FEED_VERSION.eq(this.feedVersion)))).orderBy(subq2.DEPARTURE_TIME).fetchMaps();
         } else return withoutRoute.orderBy(subq2.DEPARTURE_TIME).fetchMaps();
 
