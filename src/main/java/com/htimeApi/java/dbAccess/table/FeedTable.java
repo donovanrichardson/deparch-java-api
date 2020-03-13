@@ -28,6 +28,7 @@ public class FeedTable {
     private String dest;
     private Map<Integer, TableField<ServiceRecord, Byte>> weekdays = new HashMap();
     public static JSONFormat jf = new JSONFormat().format(true).header(false).recordFormat(JSONFormat.RecordFormat.OBJECT);
+    private boolean westbound = false;
 
     public FeedTable(String feedVersion, DSLContext dsl){
         this.feedVersion = feedVersion;
@@ -51,7 +52,7 @@ public class FeedTable {
 //  on `gtfs`.`stop`.`stop_id` = `gtfs`.`stop_time`.`stop_id`
 //  join trip on stop_time.trip_id = trip.trip_id where route_id = 39;
 
-        SelectConditionStep notYetMaps = this.applyRouteStops(dsl.selectDistinct(STOP.STOP_NAME, STOP.PARENT_STATION.as("stop_id")).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID)).leftJoin(TRIP).on(STOP_TIME.TRIP_ID.eq(TRIP.TRIP_ID)))
+        SelectSeekStep1<Record2<String, String>, String> notYetMaps = this.applyRouteStops(dsl.selectDistinct(STOP.STOP_NAME, STOP.PARENT_STATION.as("stop_id")).from(STOP_TIME.leftJoin(STOP).on(STOP.STOP_ID.eq(STOP_TIME.STOP_ID).and(STOP_TIME.FEED_VERSION.eq(STOP.FEED_VERSION))).leftJoin(TRIP).on(STOP_TIME.TRIP_ID.eq(TRIP.TRIP_ID).and(STOP_TIME.FEED_VERSION.eq(TRIP.FEED_VERSION))))
 //                .where(STOP.STOP_NAME.like("%"+like+"%")) //todo this makes it take way too long. a beginning-of-string search is much more efficient
                 .where(STOP_TIME.FEED_VERSION.eq(this.feedVersion)));
         return notYetMaps.fetchMaps();
@@ -144,6 +145,26 @@ public class FeedTable {
                             .where(TRIP.ROUTE_ID.eq(this.route)))).orderBy(subq2.DEPARTURE_TIME).fetchMaps();
         } else return withoutRoute.orderBy(subq2.DEPARTURE_TIME).fetchMaps();
 
+    }
+
+    public List<Map<String, Object>> getLIRRMaps(){
+//        select stop_time.trip_id, stop.stop_name as origin, stop3.stop_name as terminus, st4.departure_time, (stop3.`stop_lon` < stop.`stop_lon` and not (stop.stop_id = 211 and stop3.stop_id = 65) )or (stop.stop_id = 65 and stop3.stop_id = 211)as westbound from stop_time left join (select distinct trip_id, feed_version, min(stop_sequence) as `first`, max(stop_sequence) as `last` from stop_time where stop_time.feed_version ="mta/86/20200305" group by trip_id) as st2 on st2.trip_id = stop_time.trip_id and st2.feed_version = stop_time.feed_version left join `stop` on stop.stop_id = stop_time.stop_id and stop.feed_version = stop_time.feed_version left join stop_time as st3 on st3.trip_id = st2.trip_id and st3.feed_version = st2.feed_version left join `stop` as stop3 on stop3.stop_id = st3.stop_id and st3.feed_version = stop3.feed_version left join stop_time as st4 on st4.trip_id = stop_time.trip_id and st4.feed_version = stop_time.feed_version right join trip on stop_time.trip_id = trip.trip_id where stop_time.feed_version ="mta/86/20200305" and stop_time.stop_sequence = st2.first and st3.stop_sequence = st2.last and st4.stop_id = 91 and st4.stop_id != stop3.stop_id and trip.service_id in (select service_id from service_exception where date = "20200311") order by departure_time;
+
+        String template = "select stop_time.trip_id, stop.stop_name as origin, stop3.stop_name as terminus, st4.departure_time, (stop3.`stop_lon` < stop.`stop_lon` and not (stop.stop_id = 211 and stop3.stop_id = 65) )or (stop.stop_id = 65 and stop3.stop_id = 211)as westbound from stop_time left join (select distinct trip_id, feed_version, min(stop_sequence) as `first`, max(stop_sequence) as `last` from stop_time where stop_time.feed_version =\"%s\" group by trip_id) as st2 on st2.trip_id = stop_time.trip_id and st2.feed_version = stop_time.feed_version left join `stop` on stop.stop_id = stop_time.stop_id and stop.feed_version = stop_time.feed_version left join stop_time as st3 on st3.trip_id = st2.trip_id and st3.feed_version = st2.feed_version left join `stop` as stop3 on stop3.stop_id = st3.stop_id and st3.feed_version = stop3.feed_version left join stop_time as st4 on st4.trip_id = stop_time.trip_id and st4.feed_version = stop_time.feed_version right join trip on stop_time.trip_id = trip.trip_id and stop_time.feed_version = trip.feed_version where stop_time.feed_version =\"%s\" and stop_time.stop_sequence = st2.first and st3.stop_sequence = st2.last and st4.stop_id = %s and st4.stop_id != stop3.stop_id and trip.service_id in (select service_id from service_exception where date = \"%s\") order by st4.departure_time; ";
+
+        //version, version, id, date
+        String sql = String.format(template, this.feedVersion, this.feedVersion, this.origin, this.dateString());
+        return dsl.fetch(sql).intoMaps();
+    }
+
+    public void setWestbound(boolean wb) {
+        this.westbound = wb;
+    }
+
+    public Object getDirection() {
+        if(westbound){
+            return "Westbound";
+        } else return "Eastbound";
     }
     //todo (a few lines above) .and(STOP_TIME.TRIP_ID.in(dsl.select(TRIP.TRIP_ID).from(TRIP)... this used to not have "from(TRIP)" in it.... the syntax error popped out
 
@@ -253,10 +274,13 @@ public class FeedTable {
 //        } else return withoutFormat.toString();
 //    }
 
-    private <R extends Record> SelectConditionStep applyRouteStops(SelectConditionStep<Record2<String, String>> where) {
+    private <R extends Record> SelectSeekStep1<Record2<String, String>, String> applyRouteStops(SelectConditionStep<Record2<String, String>> where) {
+        SelectConditionStep<Record2<String, String>> intermediate;
         if(this.route != null){
-            return where.and(TRIP.ROUTE_ID.eq(this.route));//todo is this the same as an exists statement?
-        }else return where;
+            intermediate = where.and(TRIP.ROUTE_ID.eq(this.route));//todo is this the same as an exists statement?
+        }else intermediate = where;
+
+        return intermediate.orderBy(STOP.STOP_NAME);
     }
 
     public void setOrigin(String origin) { //todo what if it's not correct
