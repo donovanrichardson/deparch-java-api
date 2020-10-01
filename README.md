@@ -1,6 +1,6 @@
 # Deparch (Long Island Rail Road Departure Timetables)
 
-## HTTP methods : 3 GET methods
+## HTTP methods : 2 GET methods
 
 ### /stops?name
 
